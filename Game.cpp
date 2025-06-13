@@ -71,7 +71,6 @@ void Game::Update(float deltaTime)
 
         if (waitingForMouseRelease)
         {
-            // On attend que le bouton soit relâché avant d'autoriser le placement
             if (!IsMouseButtonDown(MOUSE_LEFT_BUTTON))
             {
                 waitingForMouseRelease = false;

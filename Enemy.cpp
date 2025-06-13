@@ -52,7 +52,6 @@ void Enemy::Update(float deltaTime, const std::vector<Vector2> &path, std::vecto
 
     cooldownTimer -= deltaTime;
 
-    // Attaque des tours pour les ennemis ATTACK
     if (type == ATTACK) {
         lastAttackTowerIndex = -1;
         cooldownTimer -= deltaTime;
@@ -74,11 +73,10 @@ void Enemy::Update(float deltaTime, const std::vector<Vector2> &path, std::vecto
         } else {
             attackLaserTimer -= deltaTime;
             if (attackLaserTimer < 0.0f) attackLaserTimer = 0.0f;
-            lastAttackTowerIndex = -1; // Pas de laser si pas d'attaque ce frame
+            lastAttackTowerIndex = -1;
         }
     }
 
-    // Gestion du poison
     if (poisoned)
     {
         poisonTimer += deltaTime;

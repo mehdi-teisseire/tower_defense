@@ -53,7 +53,7 @@ void Tower::Attack(std::vector<Enemy> &enemies)
             float dy = enemy.position.y - position.y;
             float distance = sqrt(dx * dx + dy * dy);
             if (distance <= range) {
-                enemy.TakeDamage(damage * 0.7f); // dégâts plus faibles mais plus fréquents
+                enemy.TakeDamage(damage * 0.7f);
                 DrawLineV(position, enemy.position, RED);
                 // Pas de break : touche tous les ennemis dans la zone
             }
