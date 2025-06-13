@@ -1,6 +1,9 @@
 CC = g++
 CFLAGS = -Wall -std=c++11
-LIBS = -lraylib -lGL -lm -lpthread -ldl -lrt -lX11
+# For Windows
+LIBS = -lraylib -lopengl32 -lgdi32 -lwinmm
+# For Linux
+#LIBS = -lraylib -lGL -lm -lpthread -ldl -lrt -lX11
 
 SRC = main.cpp Enemy.cpp Tower.cpp Game.cpp
 OBJ = $(SRC:.cpp=.o)

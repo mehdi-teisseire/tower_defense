@@ -22,12 +22,17 @@ private:
     bool gameOver;
     int screenWidth;
     int screenHeight;
+    bool waitingForMouseRelease = false;
+
+    bool showTowerMenu = false;
+    TowerType towerTypeToBuild = BASIC;
 
 public:
     Game(int width, int height);
     void Update(float deltaTime);
     void Draw();
     void ProcessInput();
+    bool IsOnPath(Vector2 point) const;
 };
 
 #endif
