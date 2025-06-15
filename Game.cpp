@@ -140,6 +140,17 @@ void Game::Update(float deltaTime)
         {
             enemy.Update(deltaTime, path, towers);
 
+            // Check if enemy is dead from damage
+            if (enemy.health <= 0 && enemy.alive)
+            {
+                enemy.alive = false;
+                enemies.erase(std::remove_if(enemies.begin(), enemies.end(),
+                                             [](const Enemy &e)
+                                             { return !e.alive; }),
+                              enemies.end());
+                money += 100;
+            }
+
             if (enemy.currentWaypoint >= static_cast<int>(path.size()) && enemy.alive)
             {
                 lives--;
@@ -150,12 +161,6 @@ void Game::Update(float deltaTime)
                 }
             }
         }
-
-        // Remove dead enemies
-        enemies.erase(std::remove_if(enemies.begin(), enemies.end(),
-                                     [](const Enemy &e)
-                                     { return !e.alive; }),
-                      enemies.end());
 
         // Update towers
         for (auto &tower : towers)
