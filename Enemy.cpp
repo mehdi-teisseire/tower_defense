@@ -1,36 +1,26 @@
-#include "Enemy.h"
-#include "Tower.h"
-#include <cmath>
+#include "Game.h"
+#include <algorithm>
+#include <cmath>     // For sqrt()
+#include <cfloat>    // For FLT_MAX
+#include <raylib.h>  // For Vector2 and drawing functions
+#include <raymath.h> // For Vector2Distance()
 
-Enemy::Enemy(Vector2 startPos, float spd, EnemyType t)
-    : position(startPos), speed(spd), cooldown(0.6f), cooldownTimer(0), alive(true), currentWaypoint(0), type(t)
+Enemy::Enemy(Vector2 startPos, float health, EnemyType type)
+    : position(startPos), currentWaypoint(0), speed(100.0f), health(health),
+      alive(true), type(type), attackLaserTimer(0.0f), lastAttackTowerIndex(-1)
 {
-    switch (type) {
-        case NORMAL:
-            health = maxHealth = 100;
-            color = RED;
-            break;
-        case ATTACK:
-            health = maxHealth = 60;
-            color = GRAY;
-            break;
-        case BOSS:
-            health = maxHealth = 300;
-            color = BLACK;
-            break;
-    }
 }
 
-void Enemy::Update(float deltaTime, const std::vector<Vector2> &path, std::vector<Tower>& towers)
+void Enemy::Update(float deltaTime, const std::vector<Vector2> &path, const std::vector<Tower> &towers)
 {
-    if (!alive || path.empty())
+    if (!alive)
         return;
 
-    if (currentWaypoint < path.size())
+    if (currentWaypoint < static_cast<int>(path.size()))
     {
         Vector2 target = path[currentWaypoint];
         Vector2 direction = {target.x - position.x, target.y - position.y};
-        float distance = sqrt(direction.x * direction.x + direction.y * direction.y);
+        float distance = sqrtf(direction.x * direction.x + direction.y * direction.y);
 
         if (distance < 5.0f)
         {
@@ -38,90 +28,63 @@ void Enemy::Update(float deltaTime, const std::vector<Vector2> &path, std::vecto
         }
         else
         {
-            if (distance > 0)
-            {
-                direction.x /= distance;
-                direction.y /= distance;
-            }
-            velocity.x = direction.x * speed;
-            velocity.y = direction.y * speed;
-            position.x += velocity.x * deltaTime;
-            position.y += velocity.y * deltaTime;
+            direction.x /= distance;
+            direction.y /= distance;
+            position.x += direction.x * speed * deltaTime;
+            position.y += direction.y * speed * deltaTime;
         }
     }
 
-    cooldownTimer -= deltaTime;
+    // Handle attack behavior if this is an attack enemy
+    if (type == ATTACK)
+    {
+        attackLaserTimer -= deltaTime;
+        if (attackLaserTimer <= 0.0f)
+        {
+            // Find closest tower to attack
+            float minDist = FLT_MAX;
+            int closestTower = -1;
 
-    if (type == ATTACK) {
-        lastAttackTowerIndex = -1;
-        cooldownTimer -= deltaTime;
-        if (cooldownTimer <= 0.0f) {
-            for (size_t i = 0; i < towers.size(); ++i) {
-                auto& tower = towers[i];
-                if (tower.destroyed) continue;
-                float dx = tower.position.x - position.x;
-                float dy = tower.position.y - position.y;
-                float dist = sqrt(dx * dx + dy * dy);
-                if (dist < 70.0f) {
-                    tower.TakeDamage(20);
-                    lastAttackTowerIndex = (int)i;
-                    attackLaserTimer = 0.1f; 
-                    cooldownTimer = cooldown;
-                    break;
+            for (size_t i = 0; i < towers.size(); ++i)
+            {
+                if (towers[i].destroyed)
+                    continue;
+
+                float dist = Vector2Distance(position, towers[i].position);
+                if (dist < minDist)
+                {
+                    minDist = dist;
+                    closestTower = static_cast<int>(i);
                 }
             }
-        } else {
-            attackLaserTimer -= deltaTime;
-            if (attackLaserTimer < 0.0f) attackLaserTimer = 0.0f;
-            lastAttackTowerIndex = -1;
+
+            if (closestTower != -1 && minDist < 150.0f) // Attack range
+            {
+                lastAttackTowerIndex = closestTower;
+                attackLaserTimer = 1.0f; // Cooldown
+            }
         }
     }
+}
 
-    if (poisoned)
+void Enemy::Draw() const
+{
+    Color color = RED; // Default for normal enemies
+    if (type == ATTACK)
+        color = ORANGE;
+    else if (type == BOSS)
+        color = PURPLE;
+
+    DrawCircleV(position, 20, color);
+    DrawCircleLines(position.x, position.y, 20, BLACK);
+
+    // Health bar
+    DrawRectangle(position.x - 20, position.y - 30, 40, 5, GRAY);
+    DrawRectangle(position.x - 20, position.y - 30, 40 * (health / 50.0f), 5, GREEN);
+
+    // Draw attack laser if active
+    if (type == ATTACK && attackLaserTimer > 0.0f && lastAttackTowerIndex != -1)
     {
-        poisonTimer += deltaTime;
-        poisonTick += deltaTime;
-        if (poisonTick >= 1.0f) // Applique les dégâts chaque seconde
-        {
-            TakeDamage((int)poisonDamagePerSecond);
-            poisonTick = 0.0f;
-        }
-        if (poisonTimer >= poisonDuration + 2.5f)
-        {
-            poisoned = false;
-            poisonTimer = 0.0f;
-            poisonTick = 0.0f;
-            poisonDamagePerSecond = 0.0f;
-            poisonDuration = 0.0f;
-        }
+        DrawLineEx(position, position, 3, YELLOW);
     }
-}
-
-void Enemy::Draw()
-{
-    if (!alive)
-        return;
-
-    Color drawColor = poisoned ? GREEN : color;
-    DrawCircleV(position, 15, drawColor);
-    float healthRatio = (float)health / maxHealth;
-    DrawRectangle(position.x - 15, position.y - 25, 30 * healthRatio, 5, GREEN);
-}
-
-void Enemy::TakeDamage(int damage)
-{
-    health -= damage;
-    if (health <= 0)
-    {
-        alive = false;
-    }
-}
-
-void Enemy::ApplyPoison(float duration, float dps)
-{
-    poisoned = true;
-    poisonDuration = duration;
-    poisonTimer = 0.0f;
-    poisonTick = 0.0f;
-    poisonDamagePerSecond = dps;
 }

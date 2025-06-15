@@ -1,98 +1,89 @@
-#include "Tower.h"
-#include "Enemy.h"
-#include <cmath>
+#include "Game.h"
+#include <algorithm>
+#include <cfloat>
+#include <raymath.h>
 
-Tower::Tower()
-    : position({0, 0}), range(80.0f), damage(10.0f), health(100), destroyed(false),
-      cooldown(1.0f), cooldownTimer(0), cost(100), color(BLUE), type(BASIC) {}
-
-Tower::Tower(Vector2 pos, float rng, float dmg, float cd, TowerType t)
-    : position(pos), range(rng), damage(dmg), health(100), destroyed(false),
-      cooldown(cd), cooldownTimer(0), cost(100), type(t)
+Tower::Tower(Vector2 pos, float range, float damage, float fireRate, TowerType type)
+    : position(pos), range(range), damage(damage), fireRate(fireRate),
+      fireTimer(0.0f), type(type), destroyed(false), cost(100)
 {
-    switch (type) {
-        case BASIC:  color = BLUE;  break;
-        case LASER:  color = RED;   break;
-        case POISON: color = GREEN; break;
-        default:     color = BLUE;  break;
-    }
+    if (type == LASER)
+        cost = 150;
+    else if (type == POISON)
+        cost = 200;
 }
 
 void Tower::Update(float deltaTime, std::vector<Enemy> &enemies)
 {
-    cooldownTimer -= deltaTime;
-    if (cooldownTimer <= 0)
+    if (destroyed)
+        return;
+
+    fireTimer -= deltaTime;
+
+    if (fireTimer <= 0.0f)
     {
-        Attack(enemies);
-        cooldownTimer = cooldown;
+        // Find closest enemy in range
+        float minDist = FLT_MAX;
+        Enemy *target = nullptr;
+
+        for (auto &enemy : enemies)
+        {
+            if (!enemy.alive)
+                continue;
+
+            float dist = Vector2Distance(position, enemy.position);
+            if (dist < range && dist < minDist)
+            {
+                minDist = dist;
+                target = &enemy;
+            }
+        }
+
+        if (target)
+        {
+            target->health -= damage;
+            fireTimer = fireRate;
+
+            // Special effects based on tower type
+            if (type == POISON)
+            {
+                // Area damage
+                for (auto &enemy : enemies)
+                {
+                    if (!enemy.alive)
+                        continue;
+                    if (Vector2Distance(position, enemy.position) < range * 0.6f)
+                    {
+                        enemy.health -= damage * 0.5f;
+                    }
+                }
+            }
+        }
     }
 }
 
-void Tower::Attack(std::vector<Enemy> &enemies)
+void Tower::Draw(bool ghost) const
 {
-    switch (type) {
-    case BASIC:
-        // Attaque classique
-        for (auto &enemy : enemies) {
-            if (!enemy.alive) continue;
-            float dx = enemy.position.x - position.x;
-            float dy = enemy.position.y - position.y;
-            float distance = sqrt(dx * dx + dy * dy);
-            if (distance <= range) {
-                enemy.TakeDamage(damage);
-                DrawLineV(position, enemy.position, YELLOW);
-                break;
-            }
-        }
-        break;
-    case LASER:
-        // Attaque laser continu 
-        for (auto &enemy : enemies) {
-            if (!enemy.alive) continue;
-            float dx = enemy.position.x - position.x;
-            float dy = enemy.position.y - position.y;
-            float distance = sqrt(dx * dx + dy * dy);
-            if (distance <= range) {
-                enemy.TakeDamage(damage * 0.7f);
-                DrawLineV(position, enemy.position, RED);
-                // Pas de break : touche tous les ennemis dans la zone
-            }
-        }
-        break;
-    case POISON:
-        // Attaque poison 
-        for (auto &enemy : enemies) {
-            if (!enemy.alive) continue;
-            float dx = enemy.position.x - position.x;
-            float dy = enemy.position.y - position.y;
-            float distance = sqrt(dx * dx + dy * dy);
-            if (distance <= range) {
-                enemy.TakeDamage(damage * 0.2f);
-                enemy.ApplyPoison(3.0f, 5.0f);
-                DrawLineV(position, enemy.position, GREEN);
-                break;
-            }
-        }
-        break;
-    }
-}
+    if (destroyed && !ghost)
+        return;
 
-void Tower::TakeDamage(int dmg)
-{
-    health -= dmg;
-    if (health <= 0) destroyed = true;
-}
+    Color color = BLUE;
+    if (type == LASER)
+        color = SKYBLUE;
+    else if (type == POISON)
+        color = LIME;
 
-void Tower::Draw(bool showRange)
-{
-    DrawRectangleV({position.x - 20, position.y - 20}, {40, 40}, color);
-
-    float healthRatio = (float)health / 100.0f;
-    DrawRectangle(position.x - 20, position.y - 28, 40, 5, DARKGRAY);
-    DrawRectangle(position.x - 20, position.y - 28, 40 * healthRatio, 5, GREEN);
-
-    if (showRange)
+    if (ghost)
     {
-        DrawCircleLines(position.x, position.y, range, Fade(BLUE, 0.5f));
+        color.a = 150; // Semi-transparent
+        DrawCircleV(position, range, Fade(color, 0.1f));
+    }
+
+    DrawCircleV(position, 25, color);
+    DrawCircleLines(position.x, position.y, 25, BLACK);
+
+    if (!ghost)
+    {
+        DrawCircleLines(position.x, position.y, range, Fade(color, 0.3f));
     }
 }

@@ -1,21 +1,17 @@
-CC = g++
-CFLAGS = -Wall -std=c++11
-# For Windows
-LIBS = -lraylib -lopengl32 -lgdi32 -lwinmm
-# For Linux
-#LIBS = -lraylib -lGL -lm -lpthread -ldl -lrt -lX11
+CXX = g++
+CXXFLAGS = -Wall -std=c++11
+LDFLAGS = -lraylib -lGL -lm -lpthread -ldl -lrt -lX11
+SOURCES = main.cpp Game.cpp Enemy.cpp Tower.cpp
+OBJECTS = $(SOURCES:.cpp=.o)
+EXECUTABLE = tower_defense
 
-SRC = main.cpp Enemy.cpp Tower.cpp Game.cpp
-OBJ = $(SRC:.cpp=.o)
-EXEC = tower_defense
+all: $(EXECUTABLE)
 
-all: $(EXEC)
-
-$(EXEC): $(OBJ)
-	$(CC) $(CFLAGS) $(OBJ) -o $(EXEC) $(LIBS)
+$(EXECUTABLE): $(OBJECTS)
+	$(CXX) $(CXXFLAGS) $(OBJECTS) -o $@ $(LDFLAGS)
 
 %.o: %.cpp
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
-	rm -f $(OBJ) $(EXEC)
+	rm -f $(OBJECTS) $(EXECUTABLE)
