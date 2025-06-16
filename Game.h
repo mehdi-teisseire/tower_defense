@@ -9,7 +9,9 @@
 class Game
 {
 private:
-    std::vector<Vector2> path;
+    std::vector<Vector2> mainPath;
+    std::vector<Vector2> altPath1;
+    std::vector<Vector2> altPath2;
     std::vector<Enemy> enemies;
     std::vector<Tower> towers;
 

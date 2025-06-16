@@ -2,8 +2,8 @@
 #include "Tower.h"
 #include <cmath>
 
-Enemy::Enemy(Vector2 startPos, float spd, EnemyType t)
-    : position(startPos), speed(spd), cooldown(0.6f), cooldownTimer(0), alive(true), currentWaypoint(0), type(t)
+Enemy::Enemy(Vector2 startPos, float spd, EnemyType t, const std::vector<Vector2>& pathToFollow)
+    : position(startPos), speed(spd), cooldown(0.6f), cooldownTimer(0), alive(true), currentWaypoint(0), type(t), path(pathToFollow)
 {
     switch (type) {
         case NORMAL:
@@ -23,7 +23,7 @@ Enemy::Enemy(Vector2 startPos, float spd, EnemyType t)
     }
 }
 
-void Enemy::Update(float deltaTime, const std::vector<Vector2> &path, std::vector<Tower>& towers)
+void Enemy::Update(float deltaTime, std::vector<Tower>& towers)
 {
     if (!alive || path.empty())
         return;

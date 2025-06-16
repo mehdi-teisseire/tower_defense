@@ -9,8 +9,8 @@ enum EnemyType { NORMAL, ATTACK, BOSS };
 
 struct Tower;
 
-struct Enemy
-{
+class Enemy {
+public:
     Vector2 position;
     Vector2 velocity;
     float speed;
@@ -31,8 +31,10 @@ struct Enemy
     float poisonDamagePerSecond = 0.0f;
     float attackLaserTimer = 0.0f;
 
-    Enemy(Vector2 startPos, float spd = 50.0f, EnemyType t = NORMAL);
-    void Update(float deltaTime, const std::vector<Vector2> &path, std::vector<Tower>& towers);
+    std::vector<Vector2> path; // Chemin propre à cet ennemi
+
+    Enemy(Vector2 startPos, float spd, EnemyType t, const std::vector<Vector2>& pathToFollow);
+    void Update(float deltaTime, std::vector<Tower>& towers);
     void Draw();
     void TakeDamage(int damage);
     void ApplyPoison(float duration, float dps);

@@ -7,24 +7,39 @@ Game::Game(int width, int height)
       placingTower(false), gameOver(false), screenWidth(width), screenHeight(height)
 {
     currentWave = 0;
-    enemiesPerWave[0] = 5;
-    enemiesPerWave[1] = 8;
-    enemiesPerWave[2] = 12;
-    enemiesPerWave[3] = 16;
-    enemiesPerWave[4] = 20;
+    enemiesPerWave[0] = 10;
+    enemiesPerWave[1] = 15;
+    enemiesPerWave[2] = 20;
+    enemiesPerWave[3] = 25;
+    enemiesPerWave[4] = 30;
     spawnedThisWave = 0;
     waveDelay = 3.0f;
     waveTimer = 0.0f;
     waitingNextWave = false;
 
-    path.push_back({0.0f, (float)height / 2});
-    path.push_back({200.0f, (float)height / 2});
-    path.push_back({200.0f, 150.0f});
-    path.push_back({400.0f, 150.0f});
-    path.push_back({400.0f, 450.0f});
-    path.push_back({600.0f, 450.0f});
-    path.push_back({600.0f, (float)height / 2});
-    path.push_back({(float)width, (float)height / 2});
+    // Chemin principal
+    mainPath.push_back({0.0f, (float)height / 2});
+    mainPath.push_back({200.0f, (float)height / 2});
+    mainPath.push_back({200.0f, 150.0f});
+    mainPath.push_back({400.0f, 150.0f});
+    mainPath.push_back({400.0f, 450.0f});
+    mainPath.push_back({600.0f, 450.0f});
+    mainPath.push_back({600.0f, (float)height / 2});
+    mainPath.push_back({(float)width, (float)height / 2});
+
+    // Chemin alternatif 1 (en haut)
+    altPath1.push_back({0.0f, 50.0f});
+    altPath1.push_back({200.0f, 50.0f});
+    altPath1.push_back({400.0f, 50.0f});
+    // Rejoint la fin du chemin principal
+    altPath1.push_back(mainPath.back());
+
+    // Chemin alternatif 2 (en bas)
+    altPath2.push_back({0.0f, (float)height - 50.0f});
+    altPath2.push_back({200.0f, (float)height - 50.0f});
+    altPath2.push_back({600.0f, (float)height - 50.0f}); // longe le bas
+    altPath2.push_back({600.0f, (float)height / 2});     // remonte à la sortie
+    altPath2.push_back(mainPath.back());
 }
 
 void Game::Update(float deltaTime)
@@ -55,7 +70,11 @@ void Game::Update(float deltaTime)
                     if (typeRand < 6) type = NORMAL;      // 60% de chance
                     else if (typeRand < 9) type = ATTACK; // 30% de chance
                     else type = BOSS;                     // 10% de chance
-                    enemies.emplace_back(path[0], 50.0f, type);
+                    int pathChoice = GetRandomValue(0, 2);
+                    const std::vector<Vector2>* chosenPath = &mainPath;
+                    if (pathChoice == 1) chosenPath = &altPath1;
+                    else if (pathChoice == 2) chosenPath = &altPath2;
+                    enemies.emplace_back((*chosenPath)[0], 50.0f, type, *chosenPath);
                     enemySpawnTimer = 0;
                     spawnedThisWave++;
                 }
@@ -78,9 +97,9 @@ void Game::Update(float deltaTime)
     // Update enemies
     for (auto &enemy : enemies)
     {
-        enemy.Update(deltaTime, path, towers);
+        enemy.Update(deltaTime, towers);
 
-        if (enemy.currentWaypoint >= path.size() && enemy.alive)
+        if (enemy.currentWaypoint >= enemy.path.size() && enemy.alive)
         {
             lives--;
             enemy.alive = false;
@@ -174,11 +193,13 @@ void Game::Update(float deltaTime)
 
 void Game::Draw()
 {
-    // Draw path
-    for (size_t i = 1; i < path.size(); ++i)
-    {
-        DrawLineV(path[i - 1], path[i], YELLOW); // Ligne centrale
-    }
+    // Draw all paths
+    for (size_t i = 1; i < mainPath.size(); ++i)
+        DrawLineV(mainPath[i - 1], mainPath[i], YELLOW);
+    for (size_t i = 1; i < altPath1.size(); ++i)
+        DrawLineV(altPath1[i - 1], altPath1[i], ORANGE);
+    for (size_t i = 1; i < altPath2.size(); ++i)
+        DrawLineV(altPath2[i - 1], altPath2[i], SKYBLUE);
 
     // Draw enemies
     for (auto &enemy : enemies)
@@ -254,20 +275,22 @@ void Game::ProcessInput()
 
 bool Game::IsOnPath(Vector2 point) const
 {
-    for (size_t i = 1; i < path.size(); ++i)
-    {
-        Vector2 a = path[i - 1];
-        Vector2 b = path[i];
-        
-        float dx = b.x - a.x;
-        float dy = b.y - a.y;
-        float length2 = dx * dx + dy * dy;
-        float t = ((point.x - a.x) * dx + (point.y - a.y) * dy) / length2;
-        t = fmaxf(0, fminf(1, t));
-        Vector2 proj = { a.x + t * dx, a.y + t * dy };
-        float dist2 = (point.x - proj.x) * (point.x - proj.x) + (point.y - proj.y) * (point.y - proj.y);
-        if (dist2 < (50 / 2) * (50 / 2))
-            return true;
-    }
-    return false;
+    auto isOn = [](const std::vector<Vector2>& path, Vector2 point) {
+        for (size_t i = 1; i < path.size(); ++i)
+        {
+            Vector2 a = path[i - 1];
+            Vector2 b = path[i];
+            float dx = b.x - a.x;
+            float dy = b.y - a.y;
+            float length2 = dx * dx + dy * dy;
+            float t = ((point.x - a.x) * dx + (point.y - a.y) * dy) / length2;
+            t = fmaxf(0, fminf(1, t));
+            Vector2 proj = { a.x + t * dx, a.y + t * dy };
+            float dist2 = (point.x - proj.x) * (point.x - proj.x) + (point.y - proj.y) * (point.y - proj.y);
+            if (dist2 < (50 / 2) * (50 / 2))
+                return true;
+        }
+        return false;
+    };
+    return isOn(mainPath, point) || isOn(altPath1, point) || isOn(altPath2, point);
 }
