@@ -1,33 +1,104 @@
 #ifndef GAME_H
 #define GAME_H
 
-#include "raylib.h"
 #include <vector>
-#include "Enemy.h"
-#include "Tower.h"
+#include <raylib.h>
+
+enum GameState
+{
+    TITLE_SCREEN,
+    GAMEPLAY,
+    GAME_OVER
+};
+
+enum EnemyType
+{
+    NORMAL,
+    ATTACK,
+    BOSS
+};
+
+enum TowerType
+{
+    BASIC,
+    LASER,
+    POISON
+};
+
+class Enemy
+{
+public:
+    Vector2 position;
+    int currentWaypoint;
+    float speed;
+    float health;
+    bool alive;
+    EnemyType type;
+    float attackLaserTimer;
+    int lastAttackTowerIndex;
+
+    Enemy(Vector2 startPos, float health, EnemyType type);
+    void Update(float deltaTime, const std::vector<Vector2> &path, const std::vector<class Tower> &towers);
+    void Draw() const;
+};
+
+class Tower
+{
+public:
+    Vector2 position;
+    float range;
+    float damage;
+    float fireRate;
+    float fireTimer;
+    TowerType type;
+    bool destroyed;
+    int cost;
+
+    Tower(Vector2 pos, float range, float damage, float fireRate, TowerType type);
+    void Update(float deltaTime, std::vector<Enemy> &enemies);
+    void Draw(bool ghost = false) const;
+};
 
 class Game
 {
+public:
+    Game(int width, int height);
+    ~Game();
+
+    void LoadResources();
+    void UnloadResources();
+    void ResetGame();
+    void Update(float deltaTime);
+    void Draw();
+    void ProcessInput();
+
 private:
-    std::vector<Vector2> path;
-    std::vector<Enemy> enemies;
-    std::vector<Tower> towers;
+    void DrawTitleScreen();
+    void DrawGameOverScreen();
+    bool IsOnPath(Vector2 point) const;
 
     int money;
     int lives;
     float enemySpawnTimer;
     float enemySpawnInterval;
     bool placingTower;
-    Tower tempTower;
     bool gameOver;
     int screenWidth;
     int screenHeight;
+    GameState currentState;
+    bool waitingForMouseRelease;
+    bool showTowerMenu;
+    TowerType towerTypeToBuild;
 
-public:
-    Game(int width, int height);
-    void Update(float deltaTime);
-    void Draw();
-    void ProcessInput();
+    std::vector<Vector2> path;
+    std::vector<Enemy> enemies;
+    std::vector<Tower> towers;
+    Tower tempTower;
+
+    // Resources
+    Texture2D backgroundTexture;
+    Texture2D titleTexture;
+    Sound titleMusic;
 };
 
-#endif
+#endif // GAME_H
