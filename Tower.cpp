@@ -3,7 +3,7 @@
 #include <cmath>
 
 Tower::Tower()
-    : position({0, 0}), range(80.0f), damage(10.0f), health(100), destroyed(false),
+    : position({0, 0}), range(80.0f), damage(15.0f), health(100), destroyed(false),
       cooldown(1.0f), cooldownTimer(0), cost(100), color(BLUE), type(BASIC) {}
 
 Tower::Tower(Vector2 pos, float rng, float dmg, float cd, TowerType t)

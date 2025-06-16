@@ -12,10 +12,12 @@ Enemy::Enemy(Vector2 startPos, float spd, EnemyType t)
             break;
         case ATTACK:
             health = maxHealth = 60;
+            cooldown = 1.0f;
             color = GRAY;
             break;
         case BOSS:
             health = maxHealth = 300;
+            speed = 30.0f;
             color = BLACK;
             break;
     }

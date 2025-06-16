@@ -3,7 +3,7 @@
 #include <cmath>
 
 Game::Game(int width, int height)
-    : money(3000), lives(10), enemySpawnTimer(0), enemySpawnInterval(2.0f),
+    : money(1200), lives(10), enemySpawnTimer(0), enemySpawnInterval(2.0f),
       placingTower(false), gameOver(false), screenWidth(width), screenHeight(height)
 {
     currentWave = 0;
@@ -147,23 +147,28 @@ void Game::Update(float deltaTime)
             towerTypeToBuild = BASIC;
             placingTower = true;
             waitingForMouseRelease = true;
-            tempTower = Tower({0, 0}, 80, 10, 1.0f, BASIC);
+            tempTower = Tower({0, 0}, 80, 15, 1.0f, BASIC);
             showTowerMenu = false;
         }
         if (CheckCollisionPointRec(mousePos, laserBtn) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
             towerTypeToBuild = LASER;
             placingTower = true;
             waitingForMouseRelease = true;
-            tempTower = Tower({0, 0}, 100, 5, 0.2f, LASER);
+            tempTower = Tower({0, 0}, 100, 7, 0.2f, LASER);
             showTowerMenu = false;
         }
         if (CheckCollisionPointRec(mousePos, poisonBtn) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
             towerTypeToBuild = POISON;
             placingTower = true;
             waitingForMouseRelease = true;
-            tempTower = Tower({0, 0}, 70, 2, 1.5f, POISON);
+            tempTower = Tower({0, 0}, 70, 5, 1.5f, POISON);
             showTowerMenu = false;
         }
+    }
+
+    for (auto& enemy : enemies) {
+        if (!enemy.alive && enemy.health <= 0)
+            money += 100;
     }
 }
 
