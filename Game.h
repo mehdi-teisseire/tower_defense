@@ -25,6 +25,27 @@ enum TowerType
     POISON
 };
 
+class Enemy;
+
+class Tower
+{
+public:
+    Vector2 position;
+    float range;
+    float damage;
+    float fireRate;
+    float fireTimer;
+    TowerType type;
+    bool destroyed;
+    int cost;
+    int health = 100;
+
+    Tower(Vector2 pos, float range, float damage, float fireRate, TowerType type);
+    void Update(float deltaTime, std::vector<Enemy> &enemies);
+    void Draw(bool ghost = false) const;
+    void TakeDamage(int dmg);
+};
+
 class Enemy
 {
 public:
@@ -41,25 +62,8 @@ public:
     int lastAttackTowerIndex;
 
     Enemy(Vector2 startPos, float health, EnemyType type);
-    void Update(float deltaTime, const std::vector<Vector2> &path, const std::vector<class Tower> &towers);
+    void Update(float deltaTime, const std::vector<Vector2> &path, std::vector<Tower>& towers);
     void Draw() const;
-};
-
-class Tower
-{
-public:
-    Vector2 position;
-    float range;
-    float damage;
-    float fireRate;
-    float fireTimer;
-    TowerType type;
-    bool destroyed;
-    int cost;
-
-    Tower(Vector2 pos, float range, float damage, float fireRate, TowerType type);
-    void Update(float deltaTime, std::vector<Enemy> &enemies);
-    void Draw(bool ghost = false) const;
 };
 
 class Game

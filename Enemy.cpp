@@ -11,7 +11,7 @@ Enemy::Enemy(Vector2 startPos, float health, EnemyType type)
 {
 }
 
-void Enemy::Update(float deltaTime, const std::vector<Vector2> &path, const std::vector<Tower> &towers)
+void Enemy::Update(float deltaTime, const std::vector<Vector2> &path, std::vector<Tower>& towers)
 {
     if (!alive)
         return;
@@ -36,33 +36,28 @@ void Enemy::Update(float deltaTime, const std::vector<Vector2> &path, const std:
     }
 
     // Handle attack behavior if this is an attack enemy
-    if (type == ATTACK)
-    {
-        attackLaserTimer -= deltaTime;
-        if (attackLaserTimer <= 0.0f)
-        {
-            // Find closest tower to attack
-            float minDist = FLT_MAX;
-            int closestTower = -1;
-
-            for (size_t i = 0; i < towers.size(); ++i)
-            {
-                if (towers[i].destroyed)
-                    continue;
-
-                float dist = Vector2Distance(position, towers[i].position);
-                if (dist < minDist)
-                {
-                    minDist = dist;
-                    closestTower = static_cast<int>(i);
+    if (type == ATTACK) {
+        lastAttackTowerIndex = -1;
+        cooldownTimer -= deltaTime;
+        if (cooldownTimer <= 0.0f) {
+            for (size_t i = 0; i < towers.size(); ++i) {
+                auto& tower = towers[i];
+                if (tower.destroyed) continue;
+                float dx = tower.position.x - position.x;
+                float dy = tower.position.y - position.y;
+                float dist = sqrt(dx * dx + dy * dy);
+                if (dist < 70.0f) {
+                    tower.TakeDamage(20);
+                    lastAttackTowerIndex = (int)i;
+                    attackLaserTimer = 0.1f; 
+                    cooldownTimer = cooldown;
+                    break;
                 }
             }
-
-            if (closestTower != -1 && minDist < 150.0f) // Attack range
-            {
-                lastAttackTowerIndex = closestTower;
-                attackLaserTimer = 1.0f; // Cooldown
-            }
+        } else {
+            attackLaserTimer -= deltaTime;
+            if (attackLaserTimer < 0.0f) attackLaserTimer = 0.0f;
+            lastAttackTowerIndex = -1;
         }
     }
 }

@@ -82,8 +82,18 @@ void Tower::Draw(bool ghost) const
     DrawCircleV(position, 25, color);
     DrawCircleLines(position.x, position.y, 25, BLACK);
 
+    float healthRatio = (float)health / 100.0f;
+    DrawRectangle(position.x - 20, position.y - 28, 40, 5, DARKGRAY);
+    DrawRectangle(position.x - 20, position.y - 28, 40 * healthRatio, 5, GREEN);
+
     if (!ghost)
     {
         DrawCircleLines(position.x, position.y, range, Fade(color, 0.3f));
     }
+}
+
+void Tower::TakeDamage(int dmg)
+{
+    health -= dmg;
+    if (health <= 0) destroyed = true;
 }
