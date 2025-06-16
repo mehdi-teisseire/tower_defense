@@ -44,7 +44,7 @@ void Game::UnloadResources()
 
 void Game::ResetGame()
 {
-    money = 3000;
+    money = 1200;
     lives = 10;
     enemies.clear();
     towers.clear();
@@ -131,7 +131,13 @@ void Game::Update(float deltaTime)
                 type = ATTACK; // 30% chance
             else
                 type = BOSS; // 10% chance
-            enemies.emplace_back(path[0], 50.0f, type);
+            
+            if (type == NORMAL)
+                enemies.emplace_back(path[0], 80.0f, type); // Normal enemies spawn every 2 seconds
+            else if (type == ATTACK)
+                enemies.emplace_back(path[0], 50.0f, type); // Attack enemies spawn every 3 seconds
+            else
+                enemies.emplace_back(path[0], 200.0f, type); // Boss enemies spawn every 5 seconds
             enemySpawnTimer = 0;
         }
 

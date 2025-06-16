@@ -6,7 +6,7 @@
 #include <raymath.h> // For Vector2Distance()
 
 Enemy::Enemy(Vector2 startPos, float health, EnemyType type)
-    : position(startPos), currentWaypoint(0), speed(100.0f), health(health),
+    : position(startPos), currentWaypoint(0), speed(100.0f), health(health), maxHealth(health),
       alive(true), type(type), attackLaserTimer(0.0f), lastAttackTowerIndex(-1)
 {
 }
@@ -80,7 +80,12 @@ void Enemy::Draw() const
 
     // Health bar
     DrawRectangle(position.x - 20, position.y - 30, 40, 5, GRAY);
-    DrawRectangle(position.x - 20, position.y - 30, 40 * (health / 50.0f), 5, GREEN);
+    //maxHealth = health;
+    float healthRatio = (float)health / maxHealth;
+    DrawRectangle(position.x - 20, position.y - 30, 40 * healthRatio, 5, GREEN);
+    
+    //float healthRatio = (float)health / maxHealth;
+    //DrawRectangle(position.x - 15, position.y - 25, 30 * healthRatio, 5, GREEN);
 
     // Draw attack laser if active
     if (type == ATTACK && attackLaserTimer > 0.0f && lastAttackTowerIndex != -1)

@@ -31,7 +31,10 @@ public:
     Vector2 position;
     int currentWaypoint;
     float speed;
+    float cooldown;
+    float cooldownTimer;
     float health;
+    float maxHealth;
     bool alive;
     EnemyType type;
     float attackLaserTimer;
