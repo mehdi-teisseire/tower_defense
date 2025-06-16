@@ -35,6 +35,7 @@ private:
     float waveDelay;
     float waveTimer;
     bool waitingNextWave;
+    bool upgrading = false;
 
 public:
     Game(int width, int height);

@@ -189,6 +189,32 @@ void Game::Update(float deltaTime)
         if (!enemy.alive && enemy.health <= 0)
             money += 100;
     }
+
+    Vector2 mousePos = GetMousePosition();
+    Rectangle upgradeBtn = {660, 170, 120, 30};
+
+    if (CheckCollisionPointRec(mousePos, upgradeBtn) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+        upgrading = true;
+    }
+
+    if (upgrading && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+        float minDist = 99999.0f;
+        Tower* selected = nullptr;
+        for (auto& tower : towers) {
+            float dx = tower.position.x - mousePos.x;
+            float dy = tower.position.y - mousePos.y;
+            float dist = sqrt(dx*dx + dy*dy);
+            if (dist < 20.0f && !tower.upgraded && !tower.destroyed && dist < minDist) {
+                minDist = dist;
+                selected = &tower;
+            }
+        }
+        if (selected && money >= 300) {
+            selected->Upgrade();
+            money -= 300;
+            upgrading = false;
+        }
+    }
 }
 
 void Game::Draw()
@@ -241,6 +267,8 @@ void Game::Draw()
         DrawText("Laser", 705, 95, 12, BLACK);
         DrawRectangle(700, 130, 80, 30, LIGHTGRAY);
         DrawText("Poison", 705, 135, 12, BLACK);
+        DrawRectangle(660, 170, 120, 30, LIGHTGRAY);
+        DrawText("Améliorer tour", 665, 175, 12, BLACK);
     }
 
     for (const auto& enemy : enemies) {
@@ -254,6 +282,10 @@ void Game::Draw()
 
     // Draw wave info
     DrawText(TextFormat("Wave: %d", currentWave + 1), 10, 70, 20, WHITE);
+
+    if (upgrading) {
+        DrawText("Choisissez une tour à améliorer", 250, 20, 24, BLACK);
+    }
 }
 
 void Game::ProcessInput()

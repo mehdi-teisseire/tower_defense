@@ -83,12 +83,46 @@ void Tower::TakeDamage(int dmg)
     if (health <= 0) destroyed = true;
 }
 
+void Tower::Upgrade()
+{
+    if (upgraded) return; // Already upgraded
+
+    switch (type) {
+        case BASIC:
+            damage += 10.0f;
+            cooldown -= 0.4f;
+            health += 50;
+            maxHealth += 50;
+            break;
+        case LASER:
+            damage += 5.0f;
+            health += 50;
+            maxHealth += 50;
+            break;
+        case POISON:
+            damage += 4.0f;
+            health += 50;
+            maxHealth += 50;
+            break;
+    }
+    upgraded = true;
+}
+
 void Tower::Draw(bool showRange)
 {
-    DrawRectangleV({position.x - 20, position.y - 20}, {40, 40}, color);
+    if (upgraded) {
+        // Dessine un triangle
+        Vector2 p1 = {position.x, position.y - 24};
+        Vector2 p2 = {position.x - 20, position.y + 20};
+        Vector2 p3 = {position.x + 20, position.y + 20};
+        DrawTriangle(p1, p2, p3, color);
+    } else {
+        // Dessine un carré
+        DrawRectangleV({position.x - 20, position.y - 20}, {40, 40}, color);
+    }
 
-    float healthRatio = (float)health / 100.0f;
-    DrawRectangle(position.x - 20, position.y - 28, 40, 5, DARKGRAY);
+    float healthRatio = (float)health / (float)maxHealth;
+    DrawRectangle(position.x - 20, position.y - 28, 40, 5, BLACK);
     DrawRectangle(position.x - 20, position.y - 28, 40 * healthRatio, 5, GREEN);
 
     if (showRange)
