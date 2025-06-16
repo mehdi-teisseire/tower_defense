@@ -6,6 +6,16 @@ Game::Game(int width, int height)
     : money(3000), lives(10), enemySpawnTimer(0), enemySpawnInterval(2.0f),
       placingTower(false), gameOver(false), screenWidth(width), screenHeight(height)
 {
+    currentWave = 0;
+    enemiesPerWave[0] = 5;
+    enemiesPerWave[1] = 8;
+    enemiesPerWave[2] = 12;
+    enemiesPerWave[3] = 16;
+    enemiesPerWave[4] = 20;
+    spawnedThisWave = 0;
+    waveDelay = 3.0f;
+    waveTimer = 0.0f;
+    waitingNextWave = false;
 
     path.push_back({0.0f, (float)height / 2});
     path.push_back({200.0f, (float)height / 2});
@@ -22,17 +32,47 @@ void Game::Update(float deltaTime)
     if (gameOver)
         return;
 
-    // Spawn enemies
-    enemySpawnTimer += deltaTime;
-    if (enemySpawnTimer >= enemySpawnInterval)
+    // Gestion des vagues
+    waveTimer += deltaTime;
+    if (waitingNextWave)
     {
-        int typeRand = GetRandomValue(0, 9);
-        EnemyType type = NORMAL;
-        if (typeRand < 6) type = NORMAL;      // 60% de chance
-        else if (typeRand < 9) type = ATTACK; // 30% de chance
-        else type = BOSS;                     // 10% de chance
-        enemies.emplace_back(path[0], 50.0f, type);
-        enemySpawnTimer = 0;
+        if (waveTimer >= waveDelay)
+        {
+            waitingNextWave = false;
+            enemySpawnInterval = fmaxf(0.1f, enemySpawnInterval - 0.1f); // Augmente la fréquence des ennemis
+            currentWave++;
+        }
+    }
+    else
+    {
+        // Spawn enemies par vague
+        if (currentWave < 5) {
+            if (!waitingNextWave) {
+                enemySpawnTimer += deltaTime;
+                if (spawnedThisWave < enemiesPerWave[currentWave] && enemySpawnTimer >= enemySpawnInterval) {
+                    int typeRand = GetRandomValue(0, 9);
+                    EnemyType type = NORMAL;
+                    if (typeRand < 6) type = NORMAL;      // 60% de chance
+                    else if (typeRand < 9) type = ATTACK; // 30% de chance
+                    else type = BOSS;                     // 10% de chance
+                    enemies.emplace_back(path[0], 50.0f, type);
+                    enemySpawnTimer = 0;
+                    spawnedThisWave++;
+                }
+                // Si tous les ennemis de la vague sont apparus, on attend la prochaine vague
+                if (spawnedThisWave >= enemiesPerWave[currentWave] && enemies.empty()) {
+                    waitingNextWave = true;
+                    waveTimer = 0.0f;
+                }
+            } else {
+                waveTimer += deltaTime;
+                if (waveTimer >= waveDelay) {
+                    currentWave++;
+                    spawnedThisWave = 0;
+                    waitingNextWave = false;
+                }
+            }
+        }
     }
 
     // Update enemies
@@ -185,6 +225,9 @@ void Game::Draw()
             }
         }
     }
+
+    // Draw wave info
+    DrawText(TextFormat("Wave: %d", currentWave + 1), 10, 70, 20, WHITE);
 }
 
 void Game::ProcessInput()

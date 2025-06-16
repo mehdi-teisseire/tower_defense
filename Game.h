@@ -27,6 +27,13 @@ private:
     bool showTowerMenu = false;
     TowerType towerTypeToBuild = BASIC;
 
+    int currentWave;
+    int enemiesPerWave[5];
+    int spawnedThisWave;
+    float waveDelay;
+    float waveTimer;
+    bool waitingNextWave;
+
 public:
     Game(int width, int height);
     void Update(float deltaTime);
