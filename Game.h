@@ -37,6 +37,9 @@ private:
     bool waitingNextWave;
     bool upgrading = false;
 
+    float gameTimer = 0.0f;
+    bool timerRunning = true;
+
 public:
     Game(int width, int height);
     void Update(float deltaTime);

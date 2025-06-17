@@ -17,7 +17,7 @@ Game::Game(int width, int height)
     waveTimer = 0.0f;
     waitingNextWave = false;
 
-    // Chemin principal
+    // main path
     mainPath.push_back({0.0f, (float)height / 2});
     mainPath.push_back({200.0f, (float)height / 2});
     mainPath.push_back({200.0f, 150.0f});
@@ -27,49 +27,52 @@ Game::Game(int width, int height)
     mainPath.push_back({600.0f, (float)height / 2});
     mainPath.push_back({(float)width, (float)height / 2});
 
-    // Chemin alternatif 1 (en haut)
+    // alternative path 1 
     altPath1.push_back({0.0f, 50.0f});
     altPath1.push_back({200.0f, 50.0f});
     altPath1.push_back({400.0f, 50.0f});
-    // Rejoint la fin du chemin principal
+    
     altPath1.push_back(mainPath.back());
 
-    // Chemin alternatif 2 (en bas)
+    // alternative path 2
     altPath2.push_back({0.0f, (float)height - 50.0f});
     altPath2.push_back({200.0f, (float)height - 50.0f});
-    altPath2.push_back({600.0f, (float)height - 50.0f}); // longe le bas
-    altPath2.push_back({600.0f, (float)height / 2});     // remonte à la sortie
+    altPath2.push_back({600.0f, (float)height - 50.0f}); 
+    altPath2.push_back({600.0f, (float)height / 2});     
     altPath2.push_back(mainPath.back());
 }
 
 void Game::Update(float deltaTime)
 {
+    if (timerRunning)
+        gameTimer += deltaTime;
+
     if (gameOver)
         return;
 
-    // Gestion des vagues
+    //Wave management
     waveTimer += deltaTime;
     if (waitingNextWave)
     {
         if (waveTimer >= waveDelay)
         {
             waitingNextWave = false;
-            enemySpawnInterval = fmaxf(0.1f, enemySpawnInterval - 0.1f); // Augmente la fréquence des ennemis
+            enemySpawnInterval = fmaxf(0.1f, enemySpawnInterval - 0.1f); // increase  enemy frequencies
             currentWave++;
         }
     }
     else
     {
-        // Spawn enemies par vague
+        // Spawn enemies in waves
         if (currentWave < 5) {
             if (!waitingNextWave) {
                 enemySpawnTimer += deltaTime;
                 if (spawnedThisWave < enemiesPerWave[currentWave] && enemySpawnTimer >= enemySpawnInterval) {
                     int typeRand = GetRandomValue(0, 9);
                     EnemyType type = NORMAL;
-                    if (typeRand < 6) type = NORMAL;      // 60% de chance
-                    else if (typeRand < 9) type = ATTACK; // 30% de chance
-                    else type = BOSS;                     // 10% de chance
+                    if (typeRand < 6) type = NORMAL;      // 60% of luck
+                    else if (typeRand < 9) type = ATTACK; // 30% of luck
+                    else type = BOSS;                     // 10% of luck
                     int pathChoice = GetRandomValue(0, 2);
                     const std::vector<Vector2>* chosenPath = &mainPath;
                     if (pathChoice == 1) chosenPath = &altPath1;
@@ -78,7 +81,7 @@ void Game::Update(float deltaTime)
                     enemySpawnTimer = 0;
                     spawnedThisWave++;
                 }
-                // Si tous les ennemis de la vague sont apparus, on attend la prochaine vague
+                // end of waves so we wait the next waves
                 if (spawnedThisWave >= enemiesPerWave[currentWave] && enemies.empty()) {
                     waitingNextWave = true;
                     waveTimer = 0.0f;
@@ -157,7 +160,7 @@ void Game::Update(float deltaTime)
     {
         Vector2 mousePos = GetMousePosition();
 
-        // Exemple de 3 boutons verticaux pour chaque type de tour
+        // 3 button for each tower
         Rectangle basicBtn = {700, 50, 80, 30};
         Rectangle laserBtn = {700, 90, 80, 30};
         Rectangle poisonBtn = {700, 130, 80, 30};
@@ -215,6 +218,11 @@ void Game::Update(float deltaTime)
             upgrading = false;
         }
     }
+
+    if (currentWave >= 5 && enemies.empty() && timerRunning)
+    {
+        timerRunning = false;
+    }
 }
 
 void Game::Draw()
@@ -249,6 +257,8 @@ void Game::Draw()
     // Draw UI
     DrawText(TextFormat("Money: %d", money), 10, 10, 20, WHITE);
     DrawText(TextFormat("Lives: %d", lives), 10, 40, 20, WHITE);
+    DrawText(TextFormat("Timer: %.2f s", gameTimer), 10, 100, 20, WHITE);
+    
 
     // Draw build tower button
     DrawRectangle(700, 10, 80, 30, GREEN);
