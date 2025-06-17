@@ -83,7 +83,7 @@ void Enemy::Update(float deltaTime, std::vector<Tower>& towers)
     {
         poisonTimer += deltaTime;
         poisonTick += deltaTime;
-        if (poisonTick >= 1.0f) // Applique les dégâts chaque seconde
+        if (poisonTick >= 1.0f) // damage every second
         {
             TakeDamage((int)poisonDamagePerSecond);
             poisonTick = 0.0f;

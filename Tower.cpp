@@ -32,7 +32,7 @@ void Tower::Attack(std::vector<Enemy> &enemies)
 {
     switch (type) {
     case BASIC:
-        // Attaque classique
+        // Attack 
         for (auto &enemy : enemies) {
             if (!enemy.alive) continue;
             float dx = enemy.position.x - position.x;
@@ -46,7 +46,7 @@ void Tower::Attack(std::vector<Enemy> &enemies)
         }
         break;
     case LASER:
-        // Attaque laser continu 
+        // laser attack 
         for (auto &enemy : enemies) {
             if (!enemy.alive) continue;
             float dx = enemy.position.x - position.x;
@@ -55,12 +55,12 @@ void Tower::Attack(std::vector<Enemy> &enemies)
             if (distance <= range) {
                 enemy.TakeDamage(damage * 0.7f);
                 DrawLineV(position, enemy.position, RED);
-                // Pas de break : touche tous les ennemis dans la zone
+                
             }
         }
         break;
     case POISON:
-        // Attaque poison 
+        // Poison attack
         for (auto &enemy : enemies) {
             if (!enemy.alive) continue;
             float dx = enemy.position.x - position.x;
@@ -111,13 +111,13 @@ void Tower::Upgrade()
 void Tower::Draw(bool showRange)
 {
     if (upgraded) {
-        // Dessine un triangle
+        // Draw triangle
         Vector2 p1 = {position.x, position.y - 24};
         Vector2 p2 = {position.x - 20, position.y + 20};
         Vector2 p3 = {position.x + 20, position.y + 20};
         DrawTriangle(p1, p2, p3, color);
     } else {
-        // Dessine un carré
+        // Draw square
         DrawRectangleV({position.x - 20, position.y - 20}, {40, 40}, color);
     }
 
