@@ -31,7 +31,7 @@ public:
     float poisonDamagePerSecond = 0.0f;
     float attackLaserTimer = 0.0f;
 
-    std::vector<Vector2> path; // Chemin propre à cet ennemi
+    std::vector<Vector2> path; // Path to follow
 
     Enemy(Vector2 startPos, float spd, EnemyType t, const std::vector<Vector2>& pathToFollow);
     void Update(float deltaTime, std::vector<Tower>& towers);
